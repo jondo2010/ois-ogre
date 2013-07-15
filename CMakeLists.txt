@@ -1,3 +1,10 @@
+if (APPLE AND NOT ANDROID)
+  cmake_minimum_required(VERSION 2.8.8)
+  SET(CMAKE_SIZEOF_VOID_P 4)
+else()
+  cmake_minimum_required(VERSION 2.6)
+endif ()
+
 project(OIS)
 
 set(OIS_HEADERS
@@ -148,7 +155,8 @@ if (MINGW)
 endif ()
 
 target_link_libraries(OIS ${OIS_PLATFORM_LIBS})
-install_dep(OIS include/OIS ${OIS_HEADERS})
+#TODO: Figure out if we need the stuff that the following line did.
+#install_dep(OIS include/OIS ${OIS_HEADERS})
 if (OGREDEPS_INSTALL_DEV)
   install(FILES ${OIS_PLATFORM_HEADERS} DESTINATION include/OIS/${OIS_PLATFORM})
 endif ()
