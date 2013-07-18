@@ -141,7 +141,10 @@ if(APPLE)
   set_source_files_properties(${OIS_HEADERS} ${OIS_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++")
 endif ()
 
-if(NOT APPLE AND NOT ANDROID)
+#FIXME: Pretty sure this is supposed to only be for iOS, not all Apple platforms. (without this change, the build fails
+# on OSX -.-)
+#if(NOT APPLE AND NOT ANDROID)
+if(NOT ANDROID)
   add_definitions(-DOIS_NONCLIENT_BUILD -DOIS_DYNAMIC_LIB)
   add_library(OIS SHARED ${OIS_HEADERS} ${OIS_SOURCES} ${OIS_PLATFORM_HEADERS} ${OIS_PLATFORM_SOURCES})
 else ()
