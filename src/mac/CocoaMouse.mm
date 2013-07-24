@@ -1,23 +1,23 @@
 /*
  The zlib/libpng License
- 
+
  Copyright (c) 2005-2007 Phillip Castaneda (pjcast -- www.wreckedgames.com)
- 
+
  This software is provided 'as-is', without any express or implied warranty. In no event will
  the authors be held liable for any damages arising from the use of this software.
- 
+
  Permission is granted to anyone to use this software for any purpose, including commercial
  applications, and to alter it and redistribute it freely, subject to the following
  restrictions:
- 
+
  1. The origin of this software must not be misrepresented; you must not claim that
  you wrote the original software. If you use this software in a product,
  an acknowledgment in the product documentation would be appreciated but is
  not required.
- 
+
  2. Altered source versions must be plainly marked as such, and must not be
  misrepresented as being the original software.
- 
+
  3. This notice may not be removed or altered from any source distribution.
  */
 #include "mac/CocoaMouse.h"
@@ -35,13 +35,13 @@ CocoaMouse::CocoaMouse( InputManager* creator, bool buffered )
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 	CocoaInputManager *man = static_cast<CocoaInputManager*>(mCreator);
-    mResponder = [[CocoaMouseView alloc] initWithFrame:[[man->_getWindow() contentView] frame]];
+    mResponder = [[CocoaMouseView alloc] initWithFrame:[man->_getView() frame]];
     if(!mResponder)
         OIS_EXCEPT( E_General, "CocoaMouseView::CocoaMouseView >> Error creating event responder" );
-    
-    [[man->_getWindow() contentView] addSubview:mResponder];
+
+    [man->_getView() addSubview:mResponder];
     [mResponder setOISMouseObj:this];
-    
+
 	static_cast<CocoaInputManager*>(mCreator)->_setMouseUsed(true);
 
     [pool drain];
@@ -58,7 +58,7 @@ CocoaMouse::~CocoaMouse()
         [mResponder release];
         mResponder = nil;
     }
-    
+
 	static_cast<CocoaInputManager*>(mCreator)->_setMouseUsed(false);
 }
 
@@ -87,7 +87,7 @@ void CocoaMouse::capture()
         mTempState.clear();
         mMouseWarped = false;
         mNeedsToRegainFocus = false;
-        
+
         // Hide OS Mouse
         CGDisplayHideCursor(kCGDirectMainDisplay);
 
@@ -100,7 +100,7 @@ void CocoaMouse::capture()
         CGDisplayMoveCursorToPoint(kCGDirectMainDisplay, warpPoint);
 
         // Use NSTrackingArea to track mouse move events
-        NSTrackingAreaOptions trackingOptions = 
+        NSTrackingAreaOptions trackingOptions =
         NSTrackingMouseMoved | NSTrackingActiveAlways | NSTrackingInVisibleRect;
         NSDictionary *trackerData = [NSDictionary dictionaryWithObjectsAndKeys:
                                      [NSNumber numberWithInt:0], @"OISMouseTrackingKey", nil];
@@ -118,7 +118,7 @@ void CocoaMouse::capture()
 - (void)dealloc
 {
     [super dealloc];
-    
+
     [mTrackingArea release];
     mTrackingArea = 0;
 }
@@ -139,37 +139,37 @@ void CocoaMouse::capture()
     state->X.rel = 0;
     state->Y.rel = 0;
     state->Z.rel = 0;
-    
+
 	if(mTempState.X.rel || mTempState.Y.rel || mTempState.Z.rel)
 	{
 //		NSLog(@"%i %i %i", mTempState.X.rel, mTempState.Y.rel, mTempState.Z.rel);
-        
+
 		// Set new relative motion values
 		state->X.rel = mTempState.X.rel;
 		state->Y.rel = mTempState.Y.rel;
 		state->Z.rel = mTempState.Z.rel;
-		
+
 		// Update absolute position
 		state->X.abs += mTempState.X.rel;
 		state->Y.abs += mTempState.Y.rel;
-		
+
 		if(state->X.abs > state->width)
 			state->X.abs = state->width;
 		else if(state->X.abs < 0)
 			state->X.abs = 0;
-        
+
 		if(state->Y.abs > state->height)
 			state->Y.abs = state->height;
 		else if(state->Y.abs < 0)
 			state->Y.abs = 0;
-        
+
 		state->Z.abs += mTempState.Z.rel;
-		
+
 		//Fire off event
         if ( oisMouseObj->buffered() && oisMouseObj->getEventCallback() )
 			oisMouseObj->getEventCallback()->mouseMoved(MouseEvent(oisMouseObj, *state));
 	}
-    
+
 	mTempState.clear();
 }
 
@@ -229,14 +229,14 @@ void CocoaMouse::capture()
     CGPoint delta = CGPointMake([theEvent deltaX], [theEvent deltaY]);
     if(mNeedsToRegainFocus)
         return;
-    
+
     // Relative positioning
     if(!mMouseWarped)
     {
         mTempState.X.rel += delta.x;
         mTempState.Y.rel += delta.y;
     }
-    
+
     mMouseWarped = false;
 }
 
@@ -246,12 +246,12 @@ void CocoaMouse::capture()
     int mouseButton = MB_Right;
     NSEventType type = [theEvent type];
     MouseState *state = oisMouseObj->getMouseStatePtr();
-    
+
     if(mNeedsToRegainFocus)
         return;
-    
+
     if(type == NSRightMouseDown)
-    {	
+    {
         state->buttons |= 1 << mouseButton;
     }
 
@@ -263,9 +263,9 @@ void CocoaMouse::capture()
     int mouseButton = MB_Right;
     NSEventType type = [theEvent type];
     MouseState *state = oisMouseObj->getMouseStatePtr();
-    
+
     if(type == NSRightMouseUp)
-    {	
+    {
         state->buttons &= ~(1 << mouseButton);
     }
 
@@ -278,14 +278,14 @@ void CocoaMouse::capture()
     CGPoint delta = CGPointMake([theEvent deltaX], [theEvent deltaY]);
     if(mNeedsToRegainFocus)
         return;
-    
+
     // Relative positioning
     if(!mMouseWarped)
     {
         mTempState.X.rel += delta.x;
         mTempState.Y.rel += delta.y;
     }
-    
+
     mMouseWarped = false;
 }
 
@@ -295,10 +295,10 @@ void CocoaMouse::capture()
     int mouseButton = MB_Middle;
     NSEventType type = [theEvent type];
     MouseState *state = oisMouseObj->getMouseStatePtr();
-    
+
     if(mNeedsToRegainFocus)
         return;
-    
+
     if(type == NSOtherMouseDown)
     {
         state->buttons |= 1 << mouseButton;
@@ -312,7 +312,7 @@ void CocoaMouse::capture()
     int mouseButton = MB_Middle;
     NSEventType type = [theEvent type];
     MouseState *state = oisMouseObj->getMouseStatePtr();
-    
+
     if(type == NSOtherMouseUp)
     {
         state->buttons &= ~(1 << mouseButton);
@@ -327,14 +327,14 @@ void CocoaMouse::capture()
     CGPoint delta = CGPointMake([theEvent deltaX], [theEvent deltaY]);
     if(mNeedsToRegainFocus)
         return;
-    
+
     // Relative positioning
     if(!mMouseWarped)
     {
         mTempState.X.rel += delta.x;
         mTempState.Y.rel += delta.y;
     }
-    
+
     mMouseWarped = false;
 }
 
@@ -349,14 +349,14 @@ void CocoaMouse::capture()
     CGPoint delta = CGPointMake([theEvent deltaX], [theEvent deltaY]);
     if(mNeedsToRegainFocus)
         return;
-    
+
     // Relative positioning
     if(!mMouseWarped)
     {
         mTempState.X.rel += delta.x;
         mTempState.Y.rel += delta.y;
     }
-    
+
     mMouseWarped = false;
 }
 
