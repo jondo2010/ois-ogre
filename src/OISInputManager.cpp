@@ -109,33 +109,62 @@ InputManager* InputManager::createInputSystem( ParamList &paramList )
 
 #if defined OIS_SDL_PLATFORM
 	im = new SDLInputManager();
+
 #elif defined OIS_WIN32_PLATFORM
 	im = new Win32InputManager();
+
 #elif defined OIS_XBOX_PLATFORM
 	im = new XBoxInputManager();
+
 #elif defined OIS_LINUX_PLATFORM
 	im = new LinuxInputManager();
+
 #elif defined OIS_APPLE_PLATFORM
 	ParamList::iterator i = paramList.find("WINDOW");
+	NSView* view = NULL;
 	if(i != paramList.end())
     {
 #ifdef __OBJC__
         id obj = (id)strtoul(i->second.c_str(), 0, 10);
-        if(obj && [obj isKindOfClass:[NSView class]])
-			obj = [obj window];
         if(obj && [obj isKindOfClass:[NSWindow class]])
-            im = new CocoaInputManager();
-#endif
-#ifndef __LP64__
-        else
-            im = new MacInputManager();
-#endif
+		{
+			obj = [obj contentView];
+		}
+        if(obj && [obj isKindOfClass:[NSView class]])
+		{
+			view = (NSView*) obj;
+		}
     }
+	else
+	{
+		// else get the main active window.. user might not have access to it through some
+		// graphics libraries, if that fails then try at the application level.
+		view = [[[NSApplication sharedApplication] keyWindow] contentView];
+	}
+
+	if(view)
+	{
+		im = new CocoaInputManager(view);
+	}
+
+#ifndef __LP64__
+	if(!im)
+	{
+		im = new MacInputManager();
+	}
+#endif
+#endif
+
 #elif defined OIS_IPHONE_PLATFORM
 	im = new iPhoneInputManager();
 #else
 	OIS_EXCEPT(E_General, "No platform library.. check build platform defines!");
 #endif
+
+	if(!im)
+	{
+		OIS_EXCEPT(E_General, "No input manager could be instantiated!");
+	}
 
 	try
 	{
