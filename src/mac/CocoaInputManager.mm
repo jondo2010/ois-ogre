@@ -169,7 +169,7 @@ void CocoaInputManager::destroyObject(Object* obj)
 }
 
 //--------------------------------------------------------------------------------//
-NSWindow * _getWindow()
+NSWindow* CocoaInputManager::_getWindow()
 {
 	return [mView window];
 }
